@@ -1,0 +1,20 @@
+[project]
+name = "audio-label-studio"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "tolatolatop",email = "tolatolatop@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10,<4"
+dependencies = [
+    "label-studio>=1.17.0"
+]
+
+[tool.poetry]
+packages = [{include = "audio_label_studio", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
