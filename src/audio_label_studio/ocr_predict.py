@@ -13,10 +13,7 @@ router = APIRouter(prefix="/ocr")
 ocr_model = OCRModel()
 
 
-@router.post("/predict")
-async def predict(request: Request):
-    data: dict = await request.json()
-    tasks: List[dict] = data["tasks"]
+def handle_tasks(tasks: List[dict]):
     results = []
 
     for task in tasks:
@@ -33,26 +30,20 @@ async def predict(request: Request):
 
         response = requests.get(image_url, headers=headers)
         if response.status_code != 200:
-            print(response.text)
-            print("图片请求失败，状态码：", response.status_code)
             results.append({"result": [], "score": 0.0})
             continue
         if not response.headers.get("Content-Type", "").startswith("image/"):
-            print("返回内容不是图片，实际Content-Type:",
-                  response.headers.get("Content-Type"))
             results.append({"result": [], "score": 0.0})
             continue
 
         try:
             img = Image.open(io.BytesIO(response.content))
         except Exception as e:
-            print("图片解码失败:", e)
             results.append({"result": [], "score": 0.0})
             continue
         img_width, img_height = img.size
 
         ocr_results = ocr_model.predict(img)
-        print(ocr_results)
 
         result = []
         for text, (x, y, w, h) in ocr_results:
@@ -99,6 +90,15 @@ async def predict(request: Request):
             "result": result,
             "score": 0.95
         })
+
+    return results
+
+
+@router.post("/predict")
+async def predict(request: Request):
+    data: dict = await request.json()
+    tasks: List[dict] = data["tasks"]
+    results = handle_tasks(tasks)
     return {
         "results": results
     }
@@ -117,5 +117,4 @@ async def setup():
 @router.post("/webhook")
 async def webhook(request: Request):
     data: dict = await request.json()
-    print(data)
     return {"status": "ok"}
