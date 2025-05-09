@@ -4,6 +4,7 @@ from typing import List
 from PIL import Image
 import io
 import uuid
+import json
 import requests
 from .model import OCRModel
 import os
@@ -111,3 +112,10 @@ async def health():
 @router.post("/setup")
 async def setup():
     return {"status": "ok", "model_version": "1.0.0"}
+
+
+@router.post("/webhook")
+async def webhook(request: Request):
+    data: dict = await request.json()
+    print(data)
+    return {"status": "ok"}
