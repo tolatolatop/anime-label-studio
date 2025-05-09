@@ -13,31 +13,31 @@ router = APIRouter(prefix="/ocr")
 ocr_model = OCRModel()
 
 
+def download_image(task: dict):
+    image_url = task["data"].get("ocr")
+    if not image_url:
+        return None
+    image_url = f"http://localhost:8080{image_url}"
+    headers = {
+        "Authorization": f"Token {os.getenv('LABEL_STUDIO_API_TOKEN')}"
+    }
+    response = requests.get(image_url, headers=headers)
+    if response.status_code != 200:
+        return None
+    return response.content
+
+
 def handle_tasks(tasks: List[dict]):
     results = []
 
     for task in tasks:
-        image_url = task["data"].get("ocr")
-        if not image_url:
-            results.append({"result": [], "score": 0.0})
-            continue
-
-        image_url = f"http://localhost:8080{image_url}"
-
-        headers = {
-            "Authorization": f"Token {os.getenv('LABEL_STUDIO_API_TOKEN')}"
-        }
-
-        response = requests.get(image_url, headers=headers)
-        if response.status_code != 200:
-            results.append({"result": [], "score": 0.0})
-            continue
-        if not response.headers.get("Content-Type", "").startswith("image/"):
+        image_content = download_image(task)
+        if not image_content:
             results.append({"result": [], "score": 0.0})
             continue
 
         try:
-            img = Image.open(io.BytesIO(response.content))
+            img = Image.open(io.BytesIO(image_content))
         except Exception as e:
             results.append({"result": [], "score": 0.0})
             continue
