@@ -76,7 +76,6 @@ def main():
     args = parser.parse_args()
 
     load_dotenv(args.env)
-    load_dotenv('C:/Users/47123/AppData/Local/label-studio/label-studio/.env')
     ls = LabelStudio(
         base_url=os.environ['LABEL_STUDIO_URL'],
         api_key=os.environ['LABEL_STUDIO_TOKEN'],
