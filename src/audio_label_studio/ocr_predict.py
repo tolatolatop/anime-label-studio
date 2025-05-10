@@ -85,18 +85,19 @@ def process_ocr_results(ocr_results, img_width: int, img_height: int):
     return result
 
 
+def download_as_image_object(task: dict):
+    image_content = download_image(task)
+    if not image_content:
+        return None
+    return Image.open(io.BytesIO(image_content))
+
+
 def handle_tasks(tasks: List[dict]):
     results = []
 
     for task in tasks:
-        image_content = download_image(task)
-        if not image_content:
-            results.append({"result": [], "score": 0.0})
-            continue
-
-        try:
-            img = Image.open(io.BytesIO(image_content))
-        except Exception as e:
+        img = download_as_image_object(task)
+        if not img:
             results.append({"result": [], "score": 0.0})
             continue
 
