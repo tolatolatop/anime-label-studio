@@ -106,21 +106,97 @@ def prelabeling(task: dict):
     }
 
 
+def process_ocr_detect_result(ocr_result: list, bbox_label: dict):
+    result = []
+    uid = bbox_label['id']
+    x = bbox_label['value']['x']
+    y = bbox_label['value']['y']
+    w = bbox_label['value']['width']
+    h = bbox_label['value']['height']
+    result.append(
+        {
+            "id": uid,
+            "from_name": "label",
+            "to_name": "image",
+            "type": "rectanglelabels",
+            "value": {
+                    "x": x,
+                    "y": y,
+                    "width": w,
+                    "height": h,
+                    "rotation": 0,
+                    "labels": ["Text"]
+            }
+        }
+    )
+    text = "".join([text for text, _ in ocr_result])
+    print(text)
+    result.append({
+        "id": uid,
+        "from_name": "transcription",
+        "to_name": "image",
+        "type": "textarea",
+        "value": {
+            "text": [text],
+            "x": x,
+            "y": y,
+            "width": w,
+            "height": h,
+            "rotation": 0
+        }
+    })
+    return result
+
+
+def auto_detect(task: dict, bbox_label: dict):
+    img = download_as_image_object(task)
+    if not img:
+        return {"result": [], "score": 0.0}
+
+    img_width, img_height = img.size
+
+    x = bbox_label['value']['x'] / 100 * img_width
+    y = bbox_label['value']['y'] / 100 * img_height
+    w = bbox_label['value']['width'] / 100 * img_width
+    h = bbox_label['value']['height'] / 100 * img_height
+
+    print(x, y, w, h)
+    img_crop = img.crop((int(x), int(y), int(x + w), int(y + h)))
+
+    ocr_results = ocr_model.predict(img_crop)
+    result = process_ocr_detect_result(ocr_results, bbox_label)
+
+    return {
+        "result": result,
+        "score": 0.95
+    }
+
+
 def handle_tasks(tasks: List[dict]):
     results = []
-
     for task in tasks:
-        if "params" not in task:
-            results.append(prelabeling(task))
+        results.append(prelabeling(task))
+    return results
 
+
+def handle_detect(tasks: List[dict], bbox_label: dict):
+    results = []
+    for task in tasks:
+        results.append(auto_detect(task, bbox_label))
     return results
 
 
 @router.post("/predict")
 async def predict(request: Request):
     data: dict = await request.json()
-    tasks: List[dict] = data["tasks"]
-    results = handle_tasks(tasks)
+    if "params" not in data:
+        tasks: List[dict] = data["tasks"]
+        results = handle_tasks(tasks)
+    else:
+        tasks: List[dict] = data["tasks"]
+        bbox_labels: List[dict] = data['params']['context']['result'][0]
+        print(bbox_labels)
+        results = handle_detect(tasks, bbox_labels)
     return {
         "results": results
     }
