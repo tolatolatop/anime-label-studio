@@ -92,23 +92,26 @@ def download_as_image_object(task: dict):
     return Image.open(io.BytesIO(image_content))
 
 
+def prelabeling(task: dict):
+    img = download_as_image_object(task)
+    if not img:
+        return {"result": [], "score": 0.0}
+
+    img_width, img_height = img.size
+    ocr_results = ocr_model.predict(img)
+    result = process_ocr_results(ocr_results, img_width, img_height)
+    return {
+        "result": result,
+        "score": 0.95
+    }
+
+
 def handle_tasks(tasks: List[dict]):
     results = []
 
     for task in tasks:
-        img = download_as_image_object(task)
-        if not img:
-            results.append({"result": [], "score": 0.0})
-            continue
-
-        img_width, img_height = img.size
-        ocr_results = ocr_model.predict(img)
-        result = process_ocr_results(ocr_results, img_width, img_height)
-
-        results.append({
-            "result": result,
-            "score": 0.95
-        })
+        if "params" not in task:
+            results.append(prelabeling(task))
 
     return results
 
