@@ -6,11 +6,11 @@ import io
 import uuid
 import json
 import requests
-from .model import OCRModel
+from .model import OCRModel, TesseractOCRModel
 import os
 
 router = APIRouter(prefix="/ocr")
-ocr_model = OCRModel()
+ocr_model = TesseractOCRModel()
 
 
 def download_image(task: dict):
@@ -189,7 +189,7 @@ def handle_detect(tasks: List[dict], bbox_label: dict):
 @router.post("/predict")
 async def predict(request: Request):
     data: dict = await request.json()
-    if "params" not in data:
+    if "params" not in data or data['params']['context'] is None:
         tasks: List[dict] = data["tasks"]
         results = handle_tasks(tasks)
     else:
