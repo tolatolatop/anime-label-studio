@@ -6,11 +6,11 @@ import io
 import uuid
 import json
 import requests
-from .model import OCRModel, TesseractOCRModel
+from .model import HuoshanOCRModel
 import os
 
 router = APIRouter(prefix="/ocr")
-ocr_model = TesseractOCRModel()
+ocr_model = HuoshanOCRModel()
 
 
 def download_image(task: dict):

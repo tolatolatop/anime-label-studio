@@ -1,7 +1,7 @@
 from PIL import Image
 import pytesseract
-import numpy as np
-import os
+
+from .huoshan.ocr import predict as huoshan_predict
 
 
 class OCRModel:
@@ -68,4 +68,21 @@ class TesseractOCRModel(OCRModel):
 
                 ocr_results.append((text, (x, y, w, h)))
 
+        return ocr_results
+
+
+class HuoshanOCRModel(OCRModel):
+    def __init__(self):
+        super().__init__()
+
+    def predict(self, image: Image.Image):
+        results = huoshan_predict(image)
+        ocr_results = []
+        for result in results['data']['ocr_infos']:
+            text = result['text']
+            x = result['rect'][0][0]
+            y = result['rect'][0][1]
+            w = result['rect'][2][0] - x
+            h = result['rect'][2][1] - y
+            ocr_results.append((text, (x, y, w, h)))
         return ocr_results
