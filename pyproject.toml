@@ -12,7 +12,8 @@ dependencies = [
     "fastapi[standard] (>=0.115.12,<0.116.0)",
     "pytesseract (>=0.3.13,<0.4.0)",
     "volcengine-python-sdk (>=2.0.2,<3.0.0)",
-    "volcengine (>=1.0.184,<2.0.0)"
+    "volcengine (>=1.0.184,<2.0.0)",
+    "label-studio-sdk (>=1.0.12,<2.0.0)"
 ]
 
 [tool.poetry]
